@@ -1,14 +1,11 @@
-##EML to PDF Converter
-
-### Homepage
-<a href="https://eml-to-pdf.com">eml-to-pdf.com</a>
+##EML to PDF/HTML Converter
 
 ### Screenshot
-<img src="https://www.whitebyte.info/wp-content/uploads/2015/02/scr1.png" />
+![Screenshot](screenshot.png?raw=true)
 
 ### Commandline Interface
 ```
-Usage: EMLtoPDFConverter [options] 
+Usage: emailconverter [options] <EML-File>
   Options:
     -d, --debug
        Debug mode
@@ -24,17 +21,20 @@ Usage: EMLtoPDFConverter [options]
        Default: false
     -ad, --extract-attachments-directory
        Extract Attachments to this Directory, if this option is not present the
-       directory is besides the pdf as "-attachments".
-    -?, --help
+       directory is besides the output file as "<output-filename>-attachments".
+    -h, --help
        Print this help.
        Default: false
     -hh, --hide-headers
        Do not add email headers (subject, from, etc.) at the beginning of the
-       PDF document.
+       PDF/HTML document.
+       Default: false
+    --html
+       Produce HTML document instead of PDF.
        Default: false
     -o, --output-filepath
-       Filepath of the produced PDF document. If this option is ommited the PDF
-       will be placed alongside the EML File.
+       Filepath of the produced PDF/HTML document. If this option is ommited the
+       PDF/HTML will be placed alongside the EML File.
     -p, --proxy
        Proxy (e.g. "http://10.64.1.74:81"). If "auto" is supplied the default
        system proxy will be used.
@@ -65,3 +65,10 @@ Executes the unit tests and generates various reports (jacoco, checkstyle, findb
 
 ### License
 The code available under the terms of the GNU Affero General Public License (AGPL). This means you have to release the source code of applications that use this software. If you can't do so you can <a target="_blank" href="https://eml-to-pdf.com">buy a commercial license</a>.
+
+### Download
+A Java installation is required. If you haven't installed Java yet get it [here](https://www.java.com/download) completely free.
+
+Win32 binaries and compiled jar for non-windows Systems (MacOs, Linux, etc) can be found in [Releases](../../releases) section.
+
+*Note: If you have another system than Windows you need to install the free [wkhtmltopdf](http://wkhtmltopdf.org/downloads.html) and add it's binary to your PATH variable.*

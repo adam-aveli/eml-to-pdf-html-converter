@@ -79,6 +79,7 @@ public class MimeMessageConverter {
 
 	// html wrapper template for text/plain messages
 	private static final String HTML_WRAPPER_TEMPLATE = "<!DOCTYPE html><html><head><style>body{font-size: 0.5cm;}</style><meta charset=\"%s\"><title>title</title></head><body>%s</body></html>";
+	private static final String HTML_CHARSET_TEMPLATE = "<!DOCTYPE html><html><head><meta charset=\"%s\"><title>title</title></head><body>%s</body></html>";
 	private static final String ADD_HEADER_IFRAME_JS_TAG_TEMPLATE = "<script id=\"header-v6a8oxpf48xfzy0rhjra\" data-file=\"%s\" type=\"text/javascript\">%s</script>";
 	private static final String HEADER_FIELD_TEMPLATE = "<tr><td class=\"header-name\">%s</td><td class=\"header-value\">%s</td></tr>";
 	
@@ -108,7 +109,7 @@ public class MimeMessageConverter {
 	 * Convert an EML file to PDF.
 	 * @throws Exception
 	 */
-	public static void convertToPdf(String emlPath, String pdfOutputPath, boolean hideHeaders, boolean extractAttachments, String attachmentsdir, List<String> extParams) throws Exception {
+	public static void convertToPdf(String emlPath, String pdfOutputPath, boolean outputHTML, boolean hideHeaders, boolean extractAttachments, String attachmentsdir, List<String> extParams) throws Exception {
 		Logger.info("Start converting %s to %s", emlPath, pdfOutputPath);
 		
 		Logger.debug("Read eml file from %s", emlPath);
@@ -158,6 +159,8 @@ public class MimeMessageConverter {
 		/* ######### Embed images in the html ######### */
 		String htmlBody = bodyEntry.getEntry();
 		if (bodyEntry.getContentType().match("text/html")) {
+			htmlBody = String.format(HTML_CHARSET_TEMPLATE, charsetName, htmlBody.replaceAll("(?i)</?(html|body)>", ""));
+
 			if (inlineImageMap.size() > 0) {
 				Logger.debug("Embed the referenced images (cid) using <img src=\"data:image ...> syntax");
 
@@ -222,12 +225,11 @@ public class MimeMessageConverter {
 		Logger.debug("Body (excerpt): %s", bodyExcerpt);
 		Logger.debug("----------------------------------");
 
-		Logger.info("Start conversion to pdf");
+		Logger.info("Start conversion to " + (outputHTML ? "html" : "pdf"));
+		File pdf = new File(pdfOutputPath);
 		
 		File tmpHtmlHeader = null;
 		if (!hideHeaders) {
-			tmpHtmlHeader = File.createTempFile("emailtopdf", ".html");
-			String tmpHtmlHeaderStr = Resources.toString(Resources.getResource("header.html"), StandardCharsets.UTF_8);
 			String headers = "";
 			
 			if (!Strings.isNullOrEmpty(from)) {
@@ -246,38 +248,46 @@ public class MimeMessageConverter {
 				headers += String.format(HEADER_FIELD_TEMPLATE, "Date", HtmlEscapers.htmlEscaper().escape(sentDateStr));
 			}
 			
-			Files.write(String.format(tmpHtmlHeaderStr, headers), tmpHtmlHeader, StandardCharsets.UTF_8);
+			if (outputHTML)
+				htmlBody = htmlBody.replace("</head><body>", "<style>.header-name {color:#9E9E9E; text-align:right;}</style></head><body><table style='border:1px solid #DDD; margin: 8px'>" + headers + "</table>");
+			else {
+				tmpHtmlHeader = new File(pdf.getParentFile(), Files.getNameWithoutExtension(pdfOutputPath) + "_h.html");
+				String tmpHtmlHeaderStr = Resources.toString(Resources.getResource("header.html"), StandardCharsets.UTF_8);
 			
-			// Append this script tag dirty to the bottom
-			htmlBody += String.format(ADD_HEADER_IFRAME_JS_TAG_TEMPLATE, tmpHtmlHeader.toURI(), Resources.toString(Resources.getResource("contentScript.js"), StandardCharsets.UTF_8));
+				Files.write(String.format(tmpHtmlHeaderStr, headers), tmpHtmlHeader, StandardCharsets.UTF_8);
+			
+				// Append this script tag dirty to the bottom
+				htmlBody += String.format(ADD_HEADER_IFRAME_JS_TAG_TEMPLATE, tmpHtmlHeader.toURI(), Resources.toString(Resources.getResource("contentScript.js"), StandardCharsets.UTF_8));
+			}
 		}
 		
-		File tmpHtml = File.createTempFile("emailtopdf", ".html");
-		Logger.debug("Write html to temporary file %s", tmpHtml.getAbsolutePath());
+		File tmpHtml = new File(pdf.getParentFile(), Files.getNameWithoutExtension(pdfOutputPath) + ".html");
+		Logger.debug("Write html to file %s", tmpHtml.getAbsolutePath());
 		Files.write(htmlBody, tmpHtml, Charset.forName(charsetName));
 
-		File pdf = new File(pdfOutputPath);
-		Logger.debug("Write pdf to %s", pdf.getAbsolutePath());
+		if (!outputHTML) {
+			Logger.debug("Write pdf to %s", pdf.getAbsolutePath());
 
-		List<String> cmd = new ArrayList<String>(Arrays.asList("wkhtmltopdf",
-				"--viewport-size", "2480x3508",
-				// "--disable-smart-shrinking",
-				"--image-quality", "100",
-				"--encoding", charsetName));
-		cmd.addAll(extParams);
-		cmd.add(tmpHtml.getAbsolutePath());
-		cmd.add(pdf.getAbsolutePath());
+			List<String> cmd = new ArrayList<String>(Arrays.asList("wkhtmltopdf",
+					"--viewport-size", "2480x3508",
+					// "--disable-smart-shrinking",
+					"--image-quality", "100",
+					"--encoding", charsetName));
+			cmd.addAll(extParams);
+			cmd.add(tmpHtml.getAbsolutePath());
+			cmd.add(pdf.getAbsolutePath());
 
-		Logger.debug("Execute: %s", Joiner.on(' ').join(cmd));
-		execCommand(cmd);
+			Logger.debug("Execute: %s", Joiner.on(' ').join(cmd));
+			execCommand(cmd);
 
-		if (!tmpHtml.delete()) {
-			tmpHtml.deleteOnExit();
-		}
+			if (!tmpHtml.delete()) {
+				tmpHtml.deleteOnExit();
+			}
 
-		if (tmpHtmlHeader != null) {
-			if (!tmpHtmlHeader.delete()) {
-				tmpHtmlHeader.deleteOnExit();
+			if (tmpHtmlHeader != null) {
+				if (!tmpHtmlHeader.delete()) {
+					tmpHtmlHeader.deleteOnExit();
+				}
 			}
 		}
 		

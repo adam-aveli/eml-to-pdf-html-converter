@@ -110,7 +110,7 @@ public class MainWindow {
 		frmEmlToPdf = new JFrame();
 		frmEmlToPdf.setIconImage(Toolkit.getDefaultToolkit().getImage(MainWindow.class.getResource("/icons/logo_emlconverter-482_16x16.png")));
 		frmEmlToPdf.setResizable(false);
-		frmEmlToPdf.setTitle("EML to PDF Converter");
+		frmEmlToPdf.setTitle("EML to PDF/HTML Converter");
 		frmEmlToPdf.getContentPane().setBackground(Color.WHITE);
 		frmEmlToPdf.setBackground(Color.WHITE);
 		frmEmlToPdf.setBounds(100, 100, 700, 703);
@@ -218,11 +218,24 @@ public class MainWindow {
 		frmEmlToPdf.getContentPane().add(panel);
 		panel.setLayout(null);
 
-		final JCheckBox chckbxAddEmailHeaders = new JCheckBox("Add Email headers to the PDF document");
+		final JCheckBox chckbxAddEmailHeaders = new JCheckBox("Add Email headers to the PDF/HTML document");
 		chckbxAddEmailHeaders.setSelected(true);
 		chckbxAddEmailHeaders.setBackground(Color.WHITE);
-		chckbxAddEmailHeaders.setBounds(10, 17, 632, 23);
+		chckbxAddEmailHeaders.setBounds(10, 17, 270, 23);
 		panel.add(chckbxAddEmailHeaders);
+
+		final JRadioButton rdbtnOutputPDF = new JRadioButton("Output PDF");
+		rdbtnOutputPDF.setSelected(true);
+		rdbtnOutputPDF.setBackground(Color.WHITE);
+		rdbtnOutputPDF.setBounds(280, 17, 100, 23);
+		panel.add(rdbtnOutputPDF);
+		final JRadioButton rdbtnOutputHTML = new JRadioButton("Output HTML");
+		rdbtnOutputHTML.setBackground(Color.WHITE);
+		rdbtnOutputHTML.setBounds(380, 17, 100, 23);
+		panel.add(rdbtnOutputHTML);
+		{ButtonGroup bg = new ButtonGroup();
+		bg.add(rdbtnOutputPDF);
+		bg.add(rdbtnOutputHTML);}
 
 		final JRadioButton rdbtnAutomaticProxySelection = new JRadioButton("Automatic Proxy Selection");
 		rdbtnAutomaticProxySelection.setSelected(true);
@@ -303,7 +316,7 @@ public class MainWindow {
 				new Thread(new Runnable() {
 					@Override
 					public void run() {
-						startConversion(Collections.list(listModel.elements()), chckbxAddEmailHeaders.isSelected(), proxy, chckbxExtractAttachments.isSelected());
+						startConversion(Collections.list(listModel.elements()), rdbtnOutputHTML.isSelected(), chckbxAddEmailHeaders.isSelected(), proxy, chckbxExtractAttachments.isSelected());
 					}
 				}).start();
 			}
@@ -362,9 +375,13 @@ public class MainWindow {
 	 *
 	 * @param enumeration
 	 */
-	private void startConversion(List<String> l, boolean showHeaders, String proxy, boolean extractAttachments) {
+	private void startConversion(List<String> l, boolean outputHTML, boolean showHeaders, String proxy, boolean extractAttachments) {
 		try {
 			ArrayList<String> argsOptions = new ArrayList<String>();
+
+			if (outputHTML) {
+				argsOptions.add("--html");
+			}
 
 			if (!showHeaders) {
 				argsOptions.add("--hide-headers");

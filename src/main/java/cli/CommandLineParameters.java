@@ -31,7 +31,7 @@ public class CommandLineParameters {
 	@Parameter(description = "<EML-File>", arity = 1)
 	private List<String> files = new ArrayList<String>();
 
-	@Parameter(names = {"-o", "--output-filepath"}, description = "Filepath of the produced PDF document. If this option is ommited the PDF will be placed alongside the EML File.")
+	@Parameter(names = {"-o", "--output-filepath"}, description = "Filepath of the produced PDF/HTML document. If this option is ommited the PDF/HTML will be placed alongside the EML File.")
 	private String output;
 
 	@Parameter(names = {"-p", "--proxy"}, description = "Proxy (e.g. \"http://10.64.1.74:81\"). If \"auto\" is supplied the default system proxy will be used.")
@@ -46,13 +46,16 @@ public class CommandLineParameters {
 	@Parameter(names = {"-q", "--quiet"}, description = "Do not display any messages at all.")
 	private boolean quiet = false;
 
-	@Parameter(names = {"-?", "--help"}, description = "Print this help.", help = true)
+	@Parameter(names = {"-h", "--help"}, description = "Print this help.", help = true)
 	private boolean help;
 	
 	@Parameter(names = {"-v", "--version"}, description = "Print the version number.")
 	private boolean version;
 	
-	@Parameter(names = {"-hh", "--hide-headers"}, description = "Do not add email headers (subject, from, etc.) at the beginning of the PDF document.")
+	@Parameter(names = {"--html"}, description = "Produce HTML document instead of PDF.")
+	private boolean outputHTML = false;
+
+	@Parameter(names = {"-hh", "--hide-headers"}, description = "Do not add email headers (subject, from, etc.) at the beginning of the PDF/HTML document.")
 	private boolean hideHeaders = false;
 	
 	@Parameter(names = {"-a", "--extract-attachments"}, description = "Extract Attachments.")
@@ -61,7 +64,7 @@ public class CommandLineParameters {
 	@Parameter(names = {"-dc", "--disable-crashreports"}, description = "Do not send crash reports to the developer.")
 	private boolean disableCrashreports = false;
 	
-	@Parameter(names = {"-ad", "--extract-attachments-directory"}, description = "Extract Attachments to this Directory, if this option is not present the directory is besides the pdf as \"<pdf-name>-attachments\".")
+	@Parameter(names = {"-ad", "--extract-attachments-directory"}, description = "Extract Attachments to this Directory, if this option is not present the directory is besides the output file as \"<output-filename>-attachments\".")
 	private String extractAttachmentsDir;
 	
 	@Parameter(names = {"-gui", "--show-graphical-user-interface"}, description = "Show graphical user interface (other parameters are ignored when using this switch).")
@@ -121,6 +124,10 @@ public class CommandLineParameters {
 
 	public void setProxy(String proxy) {
 		this.proxy = proxy;
+	}
+
+	public boolean isOutputHTML() {
+		return outputHTML;
 	}
 
 	public boolean isHideHeaders() {

@@ -49,7 +49,7 @@ public class Main {
 	public static void main(String[] args) throws IOException {
 		CommandLineParameters cli = new CommandLineParameters();
 		JCommander jCmd = new JCommander(cli, args);
-		jCmd.setProgramName("EMLtoPDFConverter");
+		jCmd.setProgramName("emailconverter");
 
 		if (cli.isGui()) {
 			MainWindow.main(new String[0]);
@@ -120,7 +120,7 @@ public class Main {
 		}
 
 		try {
-			MimeMessageConverter.convertToPdf(in, out, cli.isHideHeaders(), cli.isExtractAttachments(), cli.getExtractAttachmentsDir(), extParams);
+			MimeMessageConverter.convertToPdf(in, out, cli.isOutputHTML(), cli.isHideHeaders(), cli.isExtractAttachments(), cli.getExtractAttachmentsDir(), extParams);
 		} catch (Exception e) {
 			Logger.error("The eml could not be converted. Error: %s", Throwables.getStackTraceAsString(e));
 
